@@ -1,0 +1,27 @@
+{
+    "meta" : {
+        "label": "Snowflake login with SSO",
+        "description": "Define a preset that DSS users can use to authenticate themselves on snowflake. The plugin will work with per-user credentials.",
+        "icon": "icon-cloud"
+    },
+    "defaultDefinableInline": true,
+    "defaultDefinableAtProjectLevel": true,
+    "pluginParams": [
+    ],
+
+    "params": [
+         {
+            "name": "snowflake_oauth",
+            "type": "CREDENTIAL_REQUEST",
+            "label": "Snowflake Single Sign On",
+            "credentialRequestSettings": {
+                "type": "OAUTH2",
+                "authorizationEndpoint": "https://mub86213.prod3.us-west-2.aws.snowflakecomputing.com/oauth/authorize",
+                "tokenEndpoint": "https://mub86213.prod3.us-west-2.aws.snowflakecomputing.com/oauth/token-request",
+                "scope": "refresh_token session:role:TEST_ROLE"
+            },
+            "mandatory": true
+        }
+        
+    ]
+}

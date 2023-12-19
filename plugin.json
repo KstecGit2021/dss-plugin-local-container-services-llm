@@ -1,17 +1,13 @@
 {
-    "id": "your-plugin-id",
-    "version": "0.1.0",
+    "id": "snowpark-container-services-llm",
+    "version": "0.2.3",
     "meta": {
-        "label": "Plugin template - Replace by your plugin label",
-        "category": "Your category (optional)",
-        "description": "Your description (keep it short and simple)",
-        "author": "Organization (firstName LASTNAME)",
-        "icon": "icon-font-awesome-3.2.1",
-        "licenseInfo": "Apache Software License",
-        "url": "https://www.dataiku.com/product/plugins/your-plugin-id/",
-        "tags": [
-            "myTag"
-        ],
-        "supportLevel": "NOT_SUPPORTED"
+        "label": "Snowpark Container Services LLM",
+        "description": "Connect to an LLM deployed in Snowpark Container Services",
+        "author": "Pat Masi-Phelps and Adam Gugliciello (Dataiku)",
+        "icon": "icon-snowflake",
+        "tags": [], 
+        "url": "",
+        "licenseInfo": "Apache Software License"
     }
 }
