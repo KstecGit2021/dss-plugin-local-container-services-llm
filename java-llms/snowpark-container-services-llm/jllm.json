@@ -12,25 +12,11 @@
             "mandatory": true
         },
         {
-            "name": "chatCompleteEndpointUrl",
-            "label": "Chat Complete Endpoint URL",
+            "name": "llmEndpointUrl",
+            "label": "LLM Endpoint URL",
             "type": "STRING",
             "description": "Assumes 'predict' endpoint. Don't include /predict at the end of this URL",
             "mandatory": true
-        },
-        {
-            "name": "useEmbeddingModel",
-            "label": "Use embedding LLM",
-            "description": "E.g. all-MiniLM-L6-v2",
-            "type": "BOOLEAN"
-        },
-        {
-            "name": "embedEndpointUrl",
-            "label": "Embeddings Endpoint URL",
-            "type": "STRING",
-            "description": "Assumes 'predict' endpoint. Don't include /predict at the end of this URL",
-            "mandatory": false,
-            "visibilityCondition": "model.useEmbeddingModel"
         },
         {
             "name": "snowflakeAccountUrl",
@@ -47,19 +33,11 @@
             "mandatory": false
         },
         {
-            "name": "spcsLlmCreditsPerHourCost",
+            "name": "spcsCreditsPerHourCost",
             "label": "LLM Compute Pool Credit Cost",
             "type": "DOUBLE",
             "description": "Credits per hour",
             "mandatory": false
-        },
-        {
-            "name": "spcsEmbedCreditsPerHourCost",
-            "label": "Embedding Compute Pool Credit Cost",
-            "type": "DOUBLE",
-            "description": "Credits per hour",
-            "mandatory": false,
-            "visibilityCondition": "model.useEmbeddingModel"
         },
         {
             "name": "snowflakeCreditCost",

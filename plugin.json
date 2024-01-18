@@ -1,6 +1,6 @@
 {
     "id": "snowpark-container-services-llm",
-    "version": "0.2.3",
+    "version": "0.2.4",
     "meta": {
         "label": "Snowpark Container Services LLM",
         "description": "Connect to an LLM deployed in Snowpark Container Services",

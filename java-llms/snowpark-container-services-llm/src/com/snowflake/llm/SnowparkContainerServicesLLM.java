@@ -40,18 +40,15 @@ import com.dataiku.dip.utils.JF.ObjectBuilder;
 
 public class SnowparkContainerServicesLLM extends CustomLLMClient {
     public SnowparkContainerServicesLLM(){}
-    private String chatCompleteEndpointUrl;
-    private String embedEndpointUrl;
+    private String llmEndpointUrl;
     private String snowflakeAccountURL;
     private int maxParallelism = 1;
-    private double spcsLlmCreditsPerHourCost = 1.0;
-    private double spcsEmbedCreditsPerHourCost = 1.0;
+    private double spcsCreditsPerHourCost = 1.0;
     private double snowflakeCreditCost = 3.0;
 
     ResolvedSettings rs;
     private ExternalJSONAPIClient client;
-    private ExternalJSONAPIClient chatCompleteClient;
-    private ExternalJSONAPIClient embedClient;
+    private ExternalJSONAPIClient llmClient;
 
     private InternalLLMUsageData usageData = new LLMUsageData();
     HTTPBasedLLMNetworkSettings networkSettings = new HTTPBasedLLMNetworkSettings();
@@ -91,12 +88,10 @@ public class SnowparkContainerServicesLLM extends CustomLLMClient {
 
     public void init(ResolvedSettings settings) {
         this.rs = settings;
-        chatCompleteEndpointUrl = rs.config.get("chatCompleteEndpointUrl").getAsString();
-        embedEndpointUrl = rs.config.get("embedEndpointUrl").getAsString();
+        llmEndpointUrl = rs.config.get("llmEndpointUrl").getAsString();
         snowflakeAccountURL = rs.config.get("snowflakeAccountUrl").getAsString();
         maxParallelism = rs.config.get("maxParallelism").getAsInt();
-        spcsLlmCreditsPerHourCost = rs.config.get("spcsLlmCreditsPerHourCost").getAsDouble();
-        spcsEmbedCreditsPerHourCost = rs.config.get("spcsEmbedCreditsPerHourCost").getAsDouble();
+        spcsCreditsPerHourCost = rs.config.get("spcsCreditsPerHourCost").getAsDouble();
         snowflakeCreditCost = rs.config.get("snowflakeCreditCost").getAsDouble();
         String access_token = rs.config.get("oauth").getAsJsonObject().get("snowflake_oauth").getAsString();
         
@@ -145,41 +140,7 @@ public class SnowparkContainerServicesLLM extends CustomLLMClient {
         }
         String sessionStr=tokenResp.get("data").getAsJsonObject().get("token").getAsString();
         String snowflakeToken =  "Snowflake Token=\""+sessionStr+"\"";
-        chatCompleteClient = new ExternalJSONAPIClient(chatCompleteEndpointUrl, null, true, null) {
-            @Override
-            protected HttpGet newGet(String path) {
-                HttpGet get = new HttpGet(baseURI + path);
-                setAdditionalHeadersInRequest(get);
-                get.addHeader("Authorization", snowflakeToken);
-                return get;
-            }
-
-            @Override
-            protected HttpPost newPost(String path) {
-                HttpPost post = new HttpPost(baseURI + path);
-                setAdditionalHeadersInRequest(post);
-                post.addHeader("Authorization", snowflakeToken);
-                return post;
-            }
-
-            @Override
-            protected HttpPut newPut(String path) {
-                throw new IllegalArgumentException("unimplemented");
-            }
-
-            @Override
-            protected HttpDelete newDelete(String path) {
-                throw new IllegalArgumentException("unimplemented");
-            }
-            
-            @Override 
-            protected void customizeBuilder(HttpClientBuilder builder) {
-               builder.setRedirectStrategy(new LaxRedirectStrategy());
-               HTTPBasedLLMNetworkSettings networkSettings = new HTTPBasedLLMNetworkSettings();
-               OnlineLLMUtils.add429RetryStrategy(builder, networkSettings);
-            }
-        };
-        embedClient = new ExternalJSONAPIClient(embedEndpointUrl, null, true, null) {
+        llmClient = new ExternalJSONAPIClient(llmEndpointUrl, null, true, null) {
             @Override
             protected HttpGet newGet(String path) {
                 HttpGet get = new HttpGet(baseURI + path);
@@ -232,7 +193,7 @@ public class SnowparkContainerServicesLLM extends CustomLLMClient {
                     query.settings.topP, query.settings.topK, query.settings.stopSequences);
             
             usageData.totalComputationTimeMS += (System.currentTimeMillis() - before);
-            double estimatedCostUSD = spcsLlmCreditsPerHourCost*snowflakeCreditCost*usageData.totalComputationTimeMS/3600000;
+            double estimatedCostUSD = spcsCreditsPerHourCost*snowflakeCreditCost*usageData.totalComputationTimeMS/3600000;
             usageData.estimatedCostUSD += estimatedCostUSD;
             scr.estimatedCost = estimatedCostUSD;
 
@@ -259,32 +220,13 @@ public class SnowparkContainerServicesLLM extends CustomLLMClient {
         ob.withJSON("data", jsonMessages);
         String soICanSeeThisJsonMessages = jsonMessages.toString();
         String soICanSeeThisOb = ob.get().toString();
-        /* 
-        if (maxTokens != null) {
-            ob.with("max_tokens", maxTokens);
-        }
-        if (temperature != null) {
-            ob.with("temperature", temperature);
-        }
         
-        if (topP != null) {
-            ob.with("top_p", topP);
-        }
-         
-        if (stopSequences != null && stopSequences.size() > 0) {
-            JsonArray arr = new JsonArray();
-            stopSequences.forEach(s -> {
-                arr.add(s);
-            });
-            ob.with("stop", arr);
-        }
-        */
         logger.info("Raw SPCS LLM chat completion: " + JSON.pretty(ob.get()));
 
-        String endpoint = chatCompleteEndpointUrl + "/predict";
+        String endpoint = llmEndpointUrl + "/predict";
         logger.info("posting to SPCS LLM at: "+ endpoint);
 
-        JsonObject response = chatCompleteClient.postObjectToJSON("/predict", networkSettings.queryTimeoutMS, JsonObject.class, ob.get());
+        JsonObject response = llmClient.postObjectToJSON("/predict", networkSettings.queryTimeoutMS, JsonObject.class, ob.get());
             
         JsonArray generations = response.get("data").getAsJsonArray();
         
@@ -326,10 +268,10 @@ public class SnowparkContainerServicesLLM extends CustomLLMClient {
 
         logger.info("Raw SPCS LLM embed: " + JSON.pretty(ob.get()));
 
-        String endpoint = embedEndpointUrl + "/predict";
+        String endpoint = llmEndpointUrl + "/predict";
         logger.info("posting to SPCS LLM at: "+ endpoint);
 
-        JsonObject response = embedClient.postObjectToJSON("/predict", networkSettings.queryTimeoutMS, JsonObject.class, ob.get());
+        JsonObject response = llmClient.postObjectToJSON("/predict", networkSettings.queryTimeoutMS, JsonObject.class, ob.get());
             
         JsonArray generations = response.get("data").getAsJsonArray();
         
@@ -368,7 +310,7 @@ public class SnowparkContainerServicesLLM extends CustomLLMClient {
             scr = embed(query.text);
             
             usageData.totalComputationTimeMS += (System.currentTimeMillis() - before);
-            double estimatedCostUSD = spcsEmbedCreditsPerHourCost*snowflakeCreditCost*usageData.totalComputationTimeMS/3600000;
+            double estimatedCostUSD = spcsCreditsPerHourCost*snowflakeCreditCost*usageData.totalComputationTimeMS/3600000;
             usageData.estimatedCostUSD += estimatedCostUSD;
             scr.estimatedCost = estimatedCostUSD;
             usageData.totalPromptTokens += scr.promptTokens;
@@ -380,10 +322,13 @@ public class SnowparkContainerServicesLLM extends CustomLLMClient {
 
     @Override
     public ComputeResourceUsage getTotalCRU(LLMUsageType usageType, LLMStructuredRef llmRef) {
+        /* 
         ComputeResourceUsage cru = new ComputeResourceUsage();
         cru.setupLLMUsage(usageType, llmRef.connection, llmRef.type.toString());
         cru.llmUsage.setFromInternal(this.usageData);
         return cru;
+        */
+        return null;
     }
 
     private static DKULogger logger = DKULogger.getLogger("dku.llm.spcsplugin");
