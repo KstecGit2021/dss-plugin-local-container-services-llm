@@ -16,7 +16,7 @@ import com.dataiku.dip.llm.online.LLMClient.CompletionQuery;
 import com.dataiku.dip.llm.online.LLMClient.EmbeddingQuery;
 import com.dataiku.dip.llm.online.LLMClient.SimpleCompletionResponse;
 import com.dataiku.dip.llm.online.LLMClient.SimpleEmbeddingResponse;
-import com.dataiku.dip.llm.promptstudio.PromptStudio.LLMStructuredRef;
+import com.dataiku.dip.llm.LLMStructuredRef;
 import com.dataiku.dip.resourceusage.ComputeResourceUsage;
 import com.dataiku.dip.resourceusage.ComputeResourceUsage.InternalLLMUsageData;
 import com.dataiku.dip.resourceusage.ComputeResourceUsage.LLMUsageData;
