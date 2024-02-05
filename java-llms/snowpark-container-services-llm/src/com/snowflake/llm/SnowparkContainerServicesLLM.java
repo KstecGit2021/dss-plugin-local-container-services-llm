@@ -208,7 +208,7 @@ public class SnowparkContainerServicesLLM extends CustomLLMClient {
     public SimpleCompletionResponse chatComplete(List<ChatMessage> messages, Integer maxTokens,
             Double temperature, Double topP, Integer topK, List<String> stopSequences) throws IOException {
         
-        String completePrompt = messages.stream().map(msg -> msg.content).collect(Collectors.joining("\n\n"));
+        String completePrompt = messages.stream().map(msg -> msg.getText()).collect(Collectors.joining("\n\n"));
         ObjectBuilder ob = JF.obj();
 
         JsonArray jsonMessages = new JsonArray();
