@@ -1,0 +1,51 @@
+{
+    "id": "snowpark-container-services-llm",
+    "meta" : {
+        "label": "Snowpark Container Services LLM"
+    },
+    "params": [
+         {
+            "name": "oauth",
+            "label": "Snowflake preset",
+            "type": "PRESET",
+            "parameterSetId": "oauth-credentials",
+            "mandatory": true
+        },
+        {
+            "name": "llmEndpointUrl",
+            "label": "LLM Endpoint URL",
+            "type": "STRING",
+            "description": "Assumes 'predict' endpoint. Don't include /predict at the end of this URL",
+            "mandatory": true
+        },
+        {
+            "name": "snowflakeAccountUrl",
+            "label": "Snowflake account url",
+            "type": "STRING",
+            "description": "e.g. https://ACCOUNT_ID.prod3.us-west-2.aws.snowflakecomputing.com",
+            "mandatory": true
+        },
+        {
+            "name": "maxParallelism",
+            "label": "Max Parallelism",
+            "type": "INT",
+            "description": "Queries to run in parallel",
+            "mandatory": false
+        },
+        {
+            "name": "spcsCreditsPerHourCost",
+            "label": "LLM Compute Pool Credit Cost",
+            "type": "DOUBLE",
+            "description": "Credits per hour",
+            "mandatory": false
+        },
+        {
+            "name": "snowflakeCreditCost",
+            "label": "Snowflake Credit Cost",
+            "type": "DOUBLE",
+            "description": "Dollars per Snowflake Credit",
+            "mandatory": false
+        }       
+    ],
+    "clientClass": "com.snowflake.llm.SnowparkContainerServicesLLM"
+}
