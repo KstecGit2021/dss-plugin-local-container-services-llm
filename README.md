@@ -24,6 +24,7 @@ With this plugin, you can leverage LLMs hosted in Snowpark Container Services (S
 	d. Create a database and schema to hold the LLM model registry
 	e. Create a Snowflake OAUTH security integration  
 
+``` sql
 -- Start of Snowflake SQL instructions
 -- We'll need the ACCOUNTADMIN role to create these roles and compute pools
 USE ROLE ACCOUNTADMIN;
@@ -92,16 +93,23 @@ USE WAREHOUSE DATAIKU_SPCS_WAREHOUSE;
 CREATE SCHEMA MODEL_REGISTRY;
 USE SCHEMA MODEL_REGISTRY;
 -- End of Snowflake SQL instructions
+```
 
 ## Setup the plugin in Dataiku
 1. In the plugin settings, add a “Snowflake login with SSO” preset:
+![spcs_plugin_oauth_params](https://github.com/dataiku/dss-plugin-snowpark-container-services-llm/assets/22987725/938ba63f-6713-4820-9462-9474f8ec6708)
 
 2. In the Admin -> Connections page, create a new Snowflake connection called “spcs-access-only”. Enter the Snowflake DB, Schema, Warehouse, and Oauth info from the Snowflake-side setup. The “Auth authorization endpoint” should look like https://<YOUR_SNOWFLAKE_ACCOUNT>.aws.snowflakecomputing.com/oauth/authorize and the “Auth token endpoint” should look like https://<YOUR_SNOWFLAKE_ACCOUNT>.aws.snowflakecomputing.com/oauth/token-request. Uncheck “allow write” on the right in order to prevent users from creating datasets in this connection. We’ll use it to deploy models to SPCS only. Change the credentials mode to “per user”
+![spcs_access_connection](https://github.com/dataiku/dss-plugin-snowpark-container-services-llm/assets/22987725/4fd6fa52-9b02-4479-af03-9d95c5f285bb)
+![spcs_access_connection_2](https://github.com/dataiku/dss-plugin-snowpark-container-services-llm/assets/22987725/b99d299b-fa7d-4612-948a-228d9fdb1010)
 
 3. Go to you user profile credentials, and go through the Oauth dance for both the “spcs-access-only” connection and “snowpark-container-services-llm” plugin
+![spcs_user_oauth](https://github.com/dataiku/dss-plugin-snowpark-container-services-llm/assets/22987725/5e5dc06b-a4ab-49c0-b319-f4e283265d41)
+![spcs_user_oauth_2](https://github.com/dataiku/dss-plugin-snowpark-container-services-llm/assets/22987725/c832f93b-d5dc-498f-9916-e875c94e1217)
+
 
 4. Create a python 3.8 code environment (I named it “py_38_snowpark_llms”) and add the following packages:
-
+```
 scikit-learn==1.2.1
 mlflow==1.30.0
 mlflow[extras]
@@ -131,26 +139,34 @@ presidio-anonymizer==2.2.352
 presidio_analyzer==2.2.352
 spacy==3.7.3
 langchain==0.0.347
+```
 
 5. Deploy LLM(s) to SPCS, then retrieve the resulting public endpoints for chat completion and embedding models. We have a sample notebook [here](Deploy LLMs to Snowpark Container Services.ipynb) that shows how to deploy, for chat completion: Zephyr 7B-beta, Llama2, and Falcon; and for text embeddings: MiniLM-L6-v2.
 
 Your URLs should look something like: https://{ENDPOINT_ID}-{SNOWFLAKE_ACCOUNT_NAME/ACCOUNT_ID}.snowflakecomputing.app
 
 6. Create a new “Custom LLM” connection, then choose the “Snowpark Container Services LLM” plugin.
+![create_spcs_llm_connection](https://github.com/dataiku/dss-plugin-snowpark-container-services-llm/assets/22987725/26b9b008-c4ab-4909-afc3-5f7717e56dc1)
 
 Add a model for the main LLM, give it a name, chose the "Chat completion" capability, "Snowpark Container Services LLM" type, choose your Oauth preset, then enter the generated LLM endpoint URL from earlier. Enter your Snowflake account URL, the compute pool credit cost, and Snowflake credit cost (talk to your SNowflake rep for these). Max parallelism of queries is up to you. Start with 1 or 2.
+![chat_completion_spcs_model_in_connection](https://github.com/dataiku/dss-plugin-snowpark-container-services-llm/assets/22987725/ed61fbcb-cecd-4c88-b7ca-80922321eab7)
 
 7. Add another model (in this same connection) for the text embedding model. Give it a name, choose the "Text embedding" capability, "Snowpark Container Services LLM" type, choose your Oauth preset, then enter the other generated LLM endpoint URL from the text embedding model. This model will likely have a different compute pool cost, depending on what you set up on the Snowflake side.
+![text_embedding_spcs_model_in_connection](https://github.com/dataiku/dss-plugin-snowpark-container-services-llm/assets/22987725/c0ba3669-e4a6-473b-8f76-f91f0af691e7)
 
 8. Your chat completion LLM is now ready to use in LLM mesh!
+![spcs_chat_completion_model_prompt_studio](https://github.com/dataiku/dss-plugin-snowpark-container-services-llm/assets/22987725/075a49b9-d8ed-4814-96ef-23b04b9aec54)
 
 9. As is your embedding LLM to generate embeddings for Retrieval Augmented Generation (RAG)!
+![spcs_text_embedding_model_knowledge_bank](https://github.com/dataiku/dss-plugin-snowpark-container-services-llm/assets/22987725/631fe96c-616f-4ea3-8c41-ff2c9ee5b98a)
 
 10. Here is sample SQL code to run from Snowflake to DROP your LLM services and compute pools:
 
+```sql
 --must drop a service before dropping a compute pool
 SHOW SERVICES;
 DROP SERVICE<SERVICE_ID_FROM_ABOVE_RESULTS>;
 
 DROP COMPUTE POOL DATAIKU_GPU_3_MODEL_COMPUTE_POOL;
 DROP COMPUTE POOL DATAIKU_CPU_1_EMBED_COMPUTE_POOL;
+```
