@@ -2,6 +2,8 @@
 
 With this plugin, you can leverage LLMs hosted in Snowpark Container Services (SPCS) as part of the LLM Mesh.
 
+![Screenshot 2024-02-09 at 4 58 15 PM](https://github.com/dataiku/dss-plugin-snowpark-container-services-llm/assets/22987725/155dc4dd-148f-484a-a6c5-6643a52b2b2c)
+
 # Capabilities
 
 - Custom LLM connection option
