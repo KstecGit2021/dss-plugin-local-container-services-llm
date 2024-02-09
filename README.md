@@ -141,7 +141,7 @@ spacy==3.7.3
 langchain==0.0.347
 ```
 
-5. Deploy LLM(s) to SPCS, then retrieve the resulting public endpoints for chat completion and embedding models. We have a sample notebook [here](Deploy LLMs to Snowpark Container Services.ipynb) that shows how to deploy, for chat completion: Zephyr 7B-beta, Llama2, and Falcon; and for text embeddings: MiniLM-L6-v2.
+5. Deploy LLM(s) to SPCS, then retrieve the resulting public endpoints for chat completion and embedding models. We have a sample notebook [here](Deploy_LLMs_to_Snowpark_Container_Services.ipynb) that shows how to deploy, for chat completion: Zephyr 7B-beta, Llama2, and Falcon; and for text embeddings: MiniLM-L6-v2.
 
 Your URLs should look something like: https://{ENDPOINT_ID}-{SNOWFLAKE_ACCOUNT_NAME/ACCOUNT_ID}.snowflakecomputing.app
 
