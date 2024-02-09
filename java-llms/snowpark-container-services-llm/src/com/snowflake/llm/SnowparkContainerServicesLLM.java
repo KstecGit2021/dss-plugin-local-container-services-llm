@@ -16,7 +16,7 @@ import com.dataiku.dip.llm.online.LLMClient.CompletionQuery;
 import com.dataiku.dip.llm.online.LLMClient.EmbeddingQuery;
 import com.dataiku.dip.llm.online.LLMClient.SimpleCompletionResponse;
 import com.dataiku.dip.llm.online.LLMClient.SimpleEmbeddingResponse;
-import com.dataiku.dip.llm.LLMStructuredRef;
+import com.dataiku.dip.llm.promptstudio.PromptStudio.LLMStructuredRef;
 import com.dataiku.dip.resourceusage.ComputeResourceUsage;
 import com.dataiku.dip.resourceusage.ComputeResourceUsage.InternalLLMUsageData;
 import com.dataiku.dip.resourceusage.ComputeResourceUsage.LLMUsageData;
@@ -95,7 +95,7 @@ public class SnowparkContainerServicesLLM extends CustomLLMClient {
         snowflakeCreditCost = rs.config.get("snowflakeCreditCost").getAsDouble();
         String access_token = rs.config.get("oauth").getAsJsonObject().get("snowflake_oauth").getAsString();
         
-        ExternalJSONAPIClient tokenClient = client = new ExternalJSONAPIClient(snowflakeAccountURL, null, true, null) {
+        ExternalJSONAPIClient tokenClient = client = new ExternalJSONAPIClient(snowflakeAccountURL, null, true, com.dataiku.dip.ApplicationConfigurator.getProxySettings()) {
             @Override
             protected HttpGet newGet(String path) {
                  throw new IllegalArgumentException("unimplemented");
@@ -140,7 +140,7 @@ public class SnowparkContainerServicesLLM extends CustomLLMClient {
         }
         String sessionStr=tokenResp.get("data").getAsJsonObject().get("token").getAsString();
         String snowflakeToken =  "Snowflake Token=\""+sessionStr+"\"";
-        llmClient = new ExternalJSONAPIClient(llmEndpointUrl, null, true, null) {
+        llmClient = new ExternalJSONAPIClient(llmEndpointUrl, null, true, com.dataiku.dip.ApplicationConfigurator.getProxySettings()) {
             @Override
             protected HttpGet newGet(String path) {
                 HttpGet get = new HttpGet(baseURI + path);
@@ -320,7 +320,7 @@ public class SnowparkContainerServicesLLM extends CustomLLMClient {
         return ret;
     }
 
-    @Override
+    //@Override
     public ComputeResourceUsage getTotalCRU(LLMUsageType usageType, LLMStructuredRef llmRef) {
         /* 
         ComputeResourceUsage cru = new ComputeResourceUsage();

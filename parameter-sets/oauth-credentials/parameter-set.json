@@ -16,10 +16,31 @@
             "label": "Snowflake Single Sign On",
             "credentialRequestSettings": {
                 "type": "OAUTH2",
-                "authorizationEndpoint": "https://mub86213.prod3.us-west-2.aws.snowflakecomputing.com/oauth/authorize",
-                "tokenEndpoint": "https://mub86213.prod3.us-west-2.aws.snowflakecomputing.com/oauth/token-request",
-                "scope": "refresh_token session:role:TEST_ROLE"
+                "authorizationEndpoint": "",
+                "tokenEndpoint": "",
+                "scope": ""
             },
+            "mandatory": true
+        },
+        {
+            "name": "authorizationEndpoint",
+            "label": "Auth authorization endpoint",
+            "type": "STRING",
+            "description": "Similar to https://<SNOWFLAKE_ACCOUNT_ID>.prod3.us-west-2.aws.snowflakecomputing.com/oauth/authorize",
+            "mandatory": true
+        },
+        {
+            "name": "tokenEndpoint",
+            "label": "Auth token endpoint",
+            "type": "STRING",
+            "description": "Similar to https://<SNOWFLAKE_ACCOUNT_ID>.prod3.us-west-2.aws.snowflakecomputing.com/oauth/token-request",
+            "mandatory": true
+        },
+        {
+            "name": "scope",
+            "label": "Scope",
+            "type": "STRING",
+            "description": "Example: refresh_token session:role:DATAIKU_SPCS_ROLE",
             "mandatory": true
         }
         
