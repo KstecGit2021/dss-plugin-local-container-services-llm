@@ -38,7 +38,7 @@ CREATE SCHEMA NETWORK_SCHEMA;
 CREATE OR REPLACE NETWORK RULE SNOWFLAKE_EGRESS_ACCESS
   MODE = EGRESS
   TYPE = HOST_PORT
-  VALUE_LIST = ('0.0.0.0:443','0.0.0.0:80');
+  VALUE_LIST = ('huggingface.com:443','huggingface.co:443','huggingface.com:80','huggingface.co:80');
 
 CREATE EXTERNAL ACCESS INTEGRATION SNOWFLAKE_EGRESS_ACCESS_INTEGRATION
   ALLOWED_NETWORK_RULES = (SNOWFLAKE_EGRESS_ACCESS)
@@ -67,16 +67,17 @@ GRANT USAGE ON INTEGRATION SNOWFLAKE_EGRESS_ACCESS_INTEGRATION TO ROLE DATAIKU_S
 
 -- Create a compute pool with GPU resources to host the LLM for chat completion. GPU_3 is the smallest type with GPUs
 -- Grant usage of this compute pool to the DATAIKU_SPCS_ROLE
-CREATE COMPUTE POOL DATAIKU_GPU_3_MODEL_COMPUTE_POOL with instance_family=GPU_3 min_nodes=1 max_nodes=3;
-GRANT USAGE ON COMPUTE POOL DATAIKU_GPU_3_MODEL_COMPUTE_POOL to role DATAIKU_SPCS_ROLE;
-GRANT MONITOR ON COMPUTE POOL DATAIKU_GPU_3_MODEL_COMPUTE_POOL to role DATAIKU_SPCS_ROLE;
+CREATE COMPUTE POOL DATAIKU_GPU_NV_S_MODEL_COMPUTE_POOL with instance_family=GPU_NV_S min_nodes=1 max_nodes=1;
+GRANT USAGE ON COMPUTE POOL DATAIKU_GPU_NV_S_MODEL_COMPUTE_POOL to role DATAIKU_SPCS_ROLE;
+GRANT MONITOR ON COMPUTE POOL DATAIKU_GPU_NV_S_MODEL_COMPUTE_POOL to role DATAIKU_SPCS_ROLE;
+
 GRANT BIND SERVICE ENDPOINT on ACCOUNT to DATAIKU_SPCS_ROLE;
 
 -- Create a compute pool with CPU resources to host the LLM for sentence embeddings. STANDARD_1 is the smallest type
 -- Grant usage of this compute pool to the DATAIKU_SPCS_ROLE
-CREATE COMPUTE POOL DATAIKU_CPU_1_EMBED_COMPUTE_POOL with instance_family=STANDARD_1 min_nodes=1 max_nodes=3;
-GRANT USAGE ON COMPUTE POOL DATAIKU_CPU_1_EMBED_COMPUTE_POOL to role DATAIKU_SPCS_ROLE;
-GRANT MONITOR ON COMPUTE POOL DATAIKU_CPU_1_EMBED_COMPUTE_POOL to role DATAIKU_SPCS_ROLE;
+CREATE COMPUTE POOL DATAIKU_CPU_X64_XS_EMBED_COMPUTE_POOL with instance_family=CPU_X64_XS min_nodes=1 max_nodes=1;
+GRANT USAGE ON COMPUTE POOL DATAIKU_CPU_X64_XS_EMBED_COMPUTE_POOL to role DATAIKU_SPCS_ROLE;
+GRANT MONITOR ON COMPUTE POOL DATAIKU_CPU_X64_XS_EMBED_COMPUTE_POOL to role DATAIKU_SPCS_ROLE;
 
 CREATE OR REPLACE WAREHOUSE DATAIKU_SPCS_WAREHOUSE WITH
   WAREHOUSE_SIZE='X-SMALL'
@@ -121,7 +122,7 @@ xgboost==1.7.3
 lightgbm==3.3.5
 matplotlib==3.7.4
 scipy==1.10.1
-snowflake-snowpark-python==1.9.0
+snowflake-snowpark-python==1.12.1
 snowflake-snowpark-python[pandas]
 snowflake-connector-python[pandas]
 MarkupSafe<2.1.0
@@ -129,21 +130,22 @@ cloudpickle==2.0.0
 flask>=1.0,<1.1
 itsdangerous<2.1.0
 Jinja2>=2.11,<2.12
-snowflake-ml-python==1.2.1
+snowflake-ml-python==1.2.2
 dash==2.15.0
 dash_bootstrap_components==1.5.0
 transformers==4.37.2
 sentence-transformers==2.3.1
 datasets==2.16.1
-torch==2.2.0
+torch
 sentencepiece==0.1.99
 presidio-anonymizer==2.2.352
 presidio_analyzer==2.2.352
 spacy==3.7.3
 langchain==0.0.347
+bitsandbytes>0.37.0
 ```
 
-5. Deploy LLM(s) to SPCS, then retrieve the resulting public endpoints for chat completion and embedding models. We have a sample notebook [here](Deploy_LLMs_to_Snowpark_Container_Services.ipynb) that shows how to deploy, for chat completion: Zephyr 7B-beta, Llama2, and Falcon; and for text embeddings: MiniLM-L6-v2.
+5. Deploy LLM(s) to SPCS, then retrieve the resulting public endpoints for chat completion and embedding models. We have a sample notebook [here](Deploy_LLMs_to_Snowpark_Container_Services.ipynb) that shows how to deploy, for chat completion: Zephyr 7B-beta, Llama2, Phi2, and Falcon; and for text embeddings: MiniLM-L6-v2.
 
 Your URLs should look something like: https://{ENDPOINT_ID}-{SNOWFLAKE_ACCOUNT_NAME/ACCOUNT_ID}.snowflakecomputing.app
 
@@ -167,8 +169,8 @@ Add a model for the main LLM, give it a name, chose the "Chat completion" capabi
 ```sql
 --must drop a service before dropping a compute pool
 SHOW SERVICES;
-DROP SERVICE<SERVICE_ID_FROM_ABOVE_RESULTS>;
+DROP SERVICE <SERVICE_ID_FROM_ABOVE_RESULTS>;
 
-DROP COMPUTE POOL DATAIKU_GPU_3_MODEL_COMPUTE_POOL;
-DROP COMPUTE POOL DATAIKU_CPU_1_EMBED_COMPUTE_POOL;
+DROP COMPUTE POOL DATAIKU_GPU_NV_S_MODEL_COMPUTE_POOL;
+DROP COMPUTE POOL DATAIKU_CPU_X64_XS_EMBED_COMPUTE_POOL;
 ```
