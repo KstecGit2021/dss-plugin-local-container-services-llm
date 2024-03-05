@@ -24,7 +24,7 @@ import com.dataiku.dip.resourceusage.ComputeResourceUsage.LLMUsageType;
 import com.dataiku.dss.shadelib.org.apache.http.impl.client.LaxRedirectStrategy;
 import com.dataiku.dip.connections.AbstractLLMConnection.HTTPBasedLLMNetworkSettings;
 import com.dataiku.dip.llm.utils.OnlineLLMUtils;
-import com.google.gson.*;
+import com.google.gson.Gson;
 
 import com.dataiku.dss.shadelib.org.apache.http.client.methods.HttpDelete;
 import com.dataiku.dss.shadelib.org.apache.http.client.methods.HttpGet;
