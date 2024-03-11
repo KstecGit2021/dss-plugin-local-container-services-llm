@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import com.dataiku.common.rpc.ExternalJSONAPIClient;
@@ -101,37 +102,14 @@ public class SnowparkContainerServicesLLM extends CustomLLMClient {
         spcsCreditsPerHourCost = rs.config.get("spcsCreditsPerHourCost").getAsDouble();
         snowflakeCreditCost = rs.config.get("snowflakeCreditCost").getAsDouble();
         String access_token = rs.config.get("oauth").getAsJsonObject().get("snowflake_oauth").getAsString();
-        
-        ExternalJSONAPIClient tokenClient = client = new ExternalJSONAPIClient(snowflakeAccountURL, null, true, com.dataiku.dip.ApplicationConfigurator.getProxySettings()) {
-            @Override
-            protected HttpGet newGet(String path) {
-                 throw new IllegalArgumentException("unimplemented");
-            }
-            
-            @Override
-            protected HttpPost newPost(String path) {
-                HttpPost post = new HttpPost(baseURI + path);
-                setAdditionalHeadersInRequest(post);
-                return post;
-            }
 
-            @Override
-            protected HttpPut newPut(String path) {
-                throw new IllegalArgumentException("unimplemented");
-            }
+        Consumer<HttpClientBuilder> customizeBuilderCallback = (builder) -> {  
+            builder.setRedirectStrategy(new LaxRedirectStrategy());  
+            HTTPBasedLLMNetworkSettings networkSettings = new HTTPBasedLLMNetworkSettings();  
+            OnlineLLMUtils.add429RetryStrategy(builder, networkSettings);  
+        };  
+        ExternalJSONAPIClient tokenClient = client = new ExternalJSONAPIClient(snowflakeAccountURL, null, true, com.dataiku.dip.ApplicationConfigurator.getProxySettings(), customizeBuilderCallback);
 
-            @Override
-            protected HttpDelete newDelete(String path) {
-                throw new IllegalArgumentException("unimplemented");
-            }
-            
-            @Override 
-            protected void customizeBuilder(HttpClientBuilder builder) {
-               builder.setRedirectStrategy(new LaxRedirectStrategy());
-               HTTPBasedLLMNetworkSettings networkSettings = new HTTPBasedLLMNetworkSettings();
-               OnlineLLMUtils.add429RetryStrategy(builder, networkSettings);
-            }
-        };
         JsonObject tokenRequestBody= new JsonObject();
         
         tokenRequestBody.addProperty("AUTHENTICATOR", "OAUTH");
@@ -147,40 +125,9 @@ public class SnowparkContainerServicesLLM extends CustomLLMClient {
         }
         String sessionStr=tokenResp.get("data").getAsJsonObject().get("token").getAsString();
         String snowflakeToken =  "Snowflake Token=\""+sessionStr+"\"";
-        llmClient = new ExternalJSONAPIClient(llmEndpointUrl, null, true, com.dataiku.dip.ApplicationConfigurator.getProxySettings()) {
-            @Override
-            protected HttpGet newGet(String path) {
-                HttpGet get = new HttpGet(baseURI + path);
-                setAdditionalHeadersInRequest(get);
-                get.addHeader("Authorization", snowflakeToken);
-                return get;
-            }
-
-            @Override
-            protected HttpPost newPost(String path) {
-                HttpPost post = new HttpPost(baseURI + path);
-                setAdditionalHeadersInRequest(post);
-                post.addHeader("Authorization", snowflakeToken);
-                return post;
-            }
-
-            @Override
-            protected HttpPut newPut(String path) {
-                throw new IllegalArgumentException("unimplemented");
-            }
-
-            @Override
-            protected HttpDelete newDelete(String path) {
-                throw new IllegalArgumentException("unimplemented");
-            }
-            
-            @Override 
-            protected void customizeBuilder(HttpClientBuilder builder) {
-               builder.setRedirectStrategy(new LaxRedirectStrategy());
-               HTTPBasedLLMNetworkSettings networkSettings = new HTTPBasedLLMNetworkSettings();
-               OnlineLLMUtils.add429RetryStrategy(builder, networkSettings);
-            }
-        };
+        
+        llmClient = new ExternalJSONAPIClient(llmEndpointUrl, null, true, com.dataiku.dip.ApplicationConfigurator.getProxySettings(), customizeBuilderCallback);  
+        llmClient.addHeader("Authorization", snowflakeToken);
     }
 
     public int getMaxParallelism() {
