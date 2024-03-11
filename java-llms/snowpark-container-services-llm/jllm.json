@@ -12,6 +12,21 @@
             "mandatory": true
         },
         {
+            "name": "modelHandlingMode",
+            "label": "Model Handling Mode",
+            "type": "SELECT",
+            "selectChoices": [
+                { "value": "TEXT_GENERATION_LLAMA_2", "label": "Llama 2 model"},
+                { "value": "TEXT_GENERATION_MISTRAL", "label": "Mistral model"},
+                { "value": "TEXT_GENERATION_ZEPHYR", "label": "Zephyr model"},
+                { "value": "TEXT_GENERATION_FALCON", "label": "Falcon model"},
+                { "value": "TEXT_GENERATION_OTHER", "label": "Other model"},
+                { "value": "TEXT_GENERATION_OTHER", "label": "Embedding model"}
+            ],
+            "description": "Choose the model type deployed to SPCS. If not in this list, choose 'Other' and manually format the prompt yourself.",
+            "mandatory": true
+        },
+        {
             "name": "llmEndpointUrl",
             "label": "LLM Endpoint URL",
             "type": "STRING",
