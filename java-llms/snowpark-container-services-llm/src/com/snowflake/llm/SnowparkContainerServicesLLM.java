@@ -125,7 +125,7 @@ public class SnowparkContainerServicesLLM extends CustomLLMClient {
         }
         String sessionStr=tokenResp.get("data").getAsJsonObject().get("token").getAsString();
         String snowflakeToken =  "Snowflake Token=\""+sessionStr+"\"";
-        
+
         llmClient = new ExternalJSONAPIClient(llmEndpointUrl, null, true, com.dataiku.dip.ApplicationConfigurator.getProxySettings(), customizeBuilderCallback);  
         llmClient.addHeader("Authorization", snowflakeToken);
     }
@@ -290,13 +290,13 @@ public class SnowparkContainerServicesLLM extends CustomLLMClient {
 
     //@Override
     public ComputeResourceUsage getTotalCRU(LLMUsageType usageType, LLMStructuredRef llmRef) {
-        /* 
+        
         ComputeResourceUsage cru = new ComputeResourceUsage();
         cru.setupLLMUsage(usageType, llmRef.connection, llmRef.type.toString());
         cru.llmUsage.setFromInternal(this.usageData);
         return cru;
-        */
-        return null;
+        
+        //return null;
     }
 
     private static DKULogger logger = DKULogger.getLogger("dku.llm.spcsplugin");
