@@ -115,7 +115,6 @@ USE SCHEMA MODEL_REGISTRY;
 ```
 scikit-learn==1.2.1
 mlflow==1.30.0
-mlflow[extras]
 statsmodels==0.12.2
 protobuf==3.16.0
 xgboost==1.7.3
@@ -130,7 +129,7 @@ cloudpickle==2.0.0
 flask>=1.0,<1.1
 itsdangerous<2.1.0
 Jinja2>=2.11,<2.12
-snowflake-ml-python==1.2.2
+snowflake-ml-python==1.3.0
 dash==2.15.0
 dash_bootstrap_components==1.5.0
 transformers==4.37.2
