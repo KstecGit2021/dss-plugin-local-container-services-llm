@@ -4,7 +4,7 @@
     "meta": {
         "label": "Snowpark Container Services LLM",
         "description": "Connect to an LLM deployed in Snowpark Container Services",
-        "author": "Pat Masi-Phelps and Adam Gugliciello (Dataiku)",
+        "author": "Pat Masi-Phelps, Adam Gugliciello, and Adam Nellis (Dataiku)",
         "icon": "icon-snowflake",
         "tags": [], 
         "url": "",
