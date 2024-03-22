@@ -12,6 +12,7 @@ With this plugin, you can leverage LLMs hosted in Snowpark Container Services (S
 
 # Limitations
 
+- Must use Dataiku >= v12.5.2
 - Must use Snowflake Oauth to connect to SPCS
 - Must deploy and maintain one’s own LLMs on SPCS (we have sample code below to help)
 
