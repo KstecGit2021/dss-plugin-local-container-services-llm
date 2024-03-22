@@ -6,17 +6,20 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import com.dataiku.common.rpc.ExternalJSONAPIClient;
 import com.dataiku.dip.custom.PluginSettingsResolver.ResolvedSettings;
 import com.dataiku.dip.llm.custom.CustomLLMClient;
+import com.dataiku.dip.llm.local.HuggingFaceLocalClient;
+import com.dataiku.dip.connections.HuggingFaceLocalConnection;
 import com.dataiku.dip.llm.online.LLMClient.ChatMessage;
 import com.dataiku.dip.llm.online.LLMClient.CompletionQuery;
 import com.dataiku.dip.llm.online.LLMClient.EmbeddingQuery;
 import com.dataiku.dip.llm.online.LLMClient.SimpleCompletionResponse;
 import com.dataiku.dip.llm.online.LLMClient.SimpleEmbeddingResponse;
-import com.dataiku.dip.llm.LLMStructuredRef;
+import com.dataiku.dip.llm.promptstudio.PromptStudio.LLMStructuredRef;
 import com.dataiku.dip.resourceusage.ComputeResourceUsage;
 import com.dataiku.dip.resourceusage.ComputeResourceUsage.InternalLLMUsageData;
 import com.dataiku.dip.resourceusage.ComputeResourceUsage.LLMUsageData;
@@ -24,7 +27,10 @@ import com.dataiku.dip.resourceusage.ComputeResourceUsage.LLMUsageType;
 import com.dataiku.dss.shadelib.org.apache.http.impl.client.LaxRedirectStrategy;
 import com.dataiku.dip.connections.AbstractLLMConnection.HTTPBasedLLMNetworkSettings;
 import com.dataiku.dip.llm.utils.OnlineLLMUtils;
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonElement;
 
 import com.dataiku.dss.shadelib.org.apache.http.client.methods.HttpDelete;
 import com.dataiku.dss.shadelib.org.apache.http.client.methods.HttpGet;
@@ -42,6 +48,7 @@ public class SnowparkContainerServicesLLM extends CustomLLMClient {
     public SnowparkContainerServicesLLM(){}
     private String llmEndpointUrl;
     private String snowflakeAccountURL;
+    private String modelHandlingMode = "TEXT_GENERATION_OTHER";
     private int maxParallelism = 1;
     private double spcsCreditsPerHourCost = 1.0;
     private double snowflakeCreditCost = 3.0;
@@ -90,41 +97,19 @@ public class SnowparkContainerServicesLLM extends CustomLLMClient {
         this.rs = settings;
         llmEndpointUrl = rs.config.get("llmEndpointUrl").getAsString();
         snowflakeAccountURL = rs.config.get("snowflakeAccountUrl").getAsString();
+        modelHandlingMode = rs.config.get("modelHandlingMode").getAsString();
         maxParallelism = rs.config.get("maxParallelism").getAsInt();
         spcsCreditsPerHourCost = rs.config.get("spcsCreditsPerHourCost").getAsDouble();
         snowflakeCreditCost = rs.config.get("snowflakeCreditCost").getAsDouble();
         String access_token = rs.config.get("oauth").getAsJsonObject().get("snowflake_oauth").getAsString();
-        
-        ExternalJSONAPIClient tokenClient = client = new ExternalJSONAPIClient(snowflakeAccountURL, null, true, null) {
-            @Override
-            protected HttpGet newGet(String path) {
-                 throw new IllegalArgumentException("unimplemented");
-            }
-            
-            @Override
-            protected HttpPost newPost(String path) {
-                HttpPost post = new HttpPost(baseURI + path);
-                setAdditionalHeadersInRequest(post);
-                return post;
-            }
 
-            @Override
-            protected HttpPut newPut(String path) {
-                throw new IllegalArgumentException("unimplemented");
-            }
+        Consumer<HttpClientBuilder> customizeBuilderCallback = (builder) -> {  
+            builder.setRedirectStrategy(new LaxRedirectStrategy());  
+            HTTPBasedLLMNetworkSettings networkSettings = new HTTPBasedLLMNetworkSettings();  
+            OnlineLLMUtils.add429RetryStrategy(builder, networkSettings);  
+        };  
+        ExternalJSONAPIClient tokenClient = client = new ExternalJSONAPIClient(snowflakeAccountURL, null, true, com.dataiku.dip.ApplicationConfigurator.getProxySettings(), customizeBuilderCallback);
 
-            @Override
-            protected HttpDelete newDelete(String path) {
-                throw new IllegalArgumentException("unimplemented");
-            }
-            
-            @Override 
-            protected void customizeBuilder(HttpClientBuilder builder) {
-               builder.setRedirectStrategy(new LaxRedirectStrategy());
-               HTTPBasedLLMNetworkSettings networkSettings = new HTTPBasedLLMNetworkSettings();
-               OnlineLLMUtils.add429RetryStrategy(builder, networkSettings);
-            }
-        };
         JsonObject tokenRequestBody= new JsonObject();
         
         tokenRequestBody.addProperty("AUTHENTICATOR", "OAUTH");
@@ -140,40 +125,9 @@ public class SnowparkContainerServicesLLM extends CustomLLMClient {
         }
         String sessionStr=tokenResp.get("data").getAsJsonObject().get("token").getAsString();
         String snowflakeToken =  "Snowflake Token=\""+sessionStr+"\"";
-        llmClient = new ExternalJSONAPIClient(llmEndpointUrl, null, true, null) {
-            @Override
-            protected HttpGet newGet(String path) {
-                HttpGet get = new HttpGet(baseURI + path);
-                setAdditionalHeadersInRequest(get);
-                get.addHeader("Authorization", snowflakeToken);
-                return get;
-            }
 
-            @Override
-            protected HttpPost newPost(String path) {
-                HttpPost post = new HttpPost(baseURI + path);
-                setAdditionalHeadersInRequest(post);
-                post.addHeader("Authorization", snowflakeToken);
-                return post;
-            }
-
-            @Override
-            protected HttpPut newPut(String path) {
-                throw new IllegalArgumentException("unimplemented");
-            }
-
-            @Override
-            protected HttpDelete newDelete(String path) {
-                throw new IllegalArgumentException("unimplemented");
-            }
-            
-            @Override 
-            protected void customizeBuilder(HttpClientBuilder builder) {
-               builder.setRedirectStrategy(new LaxRedirectStrategy());
-               HTTPBasedLLMNetworkSettings networkSettings = new HTTPBasedLLMNetworkSettings();
-               OnlineLLMUtils.add429RetryStrategy(builder, networkSettings);
-            }
-        };
+        llmClient = new ExternalJSONAPIClient(llmEndpointUrl, null, true, com.dataiku.dip.ApplicationConfigurator.getProxySettings(), customizeBuilderCallback);  
+        llmClient.addHeader("Authorization", snowflakeToken);
     }
 
     public int getMaxParallelism() {
@@ -208,7 +162,21 @@ public class SnowparkContainerServicesLLM extends CustomLLMClient {
     public SimpleCompletionResponse chatComplete(List<ChatMessage> messages, Integer maxTokens,
             Double temperature, Double topP, Integer topK, List<String> stopSequences) throws IOException {
         
-        String completePrompt = messages.stream().map(msg -> msg.getText()).collect(Collectors.joining("\n\n"));
+        String completePrompt = "";
+        if (modelHandlingMode.equals("TEXT_GENERATION_LLAMA_2")) {
+            completePrompt += HuggingFaceLocalClient.getFormattedPromptContent(messages, HuggingFaceLocalConnection.HuggingFaceHandlingMode.TEXT_GENERATION_LLAMA_2);
+        } else if (modelHandlingMode.equals("TEXT_GENERATION_MISTRAL")) {
+            completePrompt += HuggingFaceLocalClient.getFormattedPromptContent(messages, HuggingFaceLocalConnection.HuggingFaceHandlingMode.TEXT_GENERATION_MISTRAL);
+        } else if (modelHandlingMode.equals("TEXT_GENERATION_ZEPHYR")) {
+            completePrompt += HuggingFaceLocalClient.getFormattedPromptContent(messages, HuggingFaceLocalConnection.HuggingFaceHandlingMode.TEXT_GENERATION_ZEPHYR);
+        } else if (modelHandlingMode.equals("TEXT_GENERATION_FALCON")) {
+            completePrompt += HuggingFaceLocalClient.getFormattedPromptContent(messages, HuggingFaceLocalConnection.HuggingFaceHandlingMode.TEXT_GENERATION_FALCON);
+        } else {
+            completePrompt += messages.stream().map(msg -> msg.getText()).collect(Collectors.joining("\n\n"));
+        }
+        logger.info("Model Handling Mode: " + modelHandlingMode);
+        logger.info("Complete Prompt: " + completePrompt);
+
         ObjectBuilder ob = JF.obj();
 
         JsonArray jsonMessages = new JsonArray();
@@ -320,15 +288,15 @@ public class SnowparkContainerServicesLLM extends CustomLLMClient {
         return ret;
     }
 
-    @Override
+    //@Override
     public ComputeResourceUsage getTotalCRU(LLMUsageType usageType, LLMStructuredRef llmRef) {
-        /* 
+        
         ComputeResourceUsage cru = new ComputeResourceUsage();
         cru.setupLLMUsage(usageType, llmRef.connection, llmRef.type.toString());
         cru.llmUsage.setFromInternal(this.usageData);
         return cru;
-        */
-        return null;
+        
+        //return null;
     }
 
     private static DKULogger logger = DKULogger.getLogger("dku.llm.spcsplugin");
