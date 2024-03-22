@@ -2,10 +2,9 @@ package com.snowflake.llm;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
+
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -19,7 +18,6 @@ import com.dataiku.dip.llm.online.LLMClient.CompletionQuery;
 import com.dataiku.dip.llm.online.LLMClient.EmbeddingQuery;
 import com.dataiku.dip.llm.online.LLMClient.SimpleCompletionResponse;
 import com.dataiku.dip.llm.online.LLMClient.SimpleEmbeddingResponse;
-import com.dataiku.dip.llm.promptstudio.PromptStudio.LLMStructuredRef;
 import com.dataiku.dip.resourceusage.ComputeResourceUsage;
 import com.dataiku.dip.resourceusage.ComputeResourceUsage.InternalLLMUsageData;
 import com.dataiku.dip.resourceusage.ComputeResourceUsage.LLMUsageData;
@@ -32,10 +30,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonElement;
 
-import com.dataiku.dss.shadelib.org.apache.http.client.methods.HttpDelete;
-import com.dataiku.dss.shadelib.org.apache.http.client.methods.HttpGet;
-import com.dataiku.dss.shadelib.org.apache.http.client.methods.HttpPost;
-import com.dataiku.dss.shadelib.org.apache.http.client.methods.HttpPut;
 import com.dataiku.dss.shadelib.org.apache.http.impl.client.HttpClientBuilder;
 
 import com.dataiku.dip.shaker.processors.expr.TokenizedText;
@@ -43,6 +37,9 @@ import com.dataiku.dip.utils.DKULogger;
 import com.dataiku.dip.utils.JSON;
 import com.dataiku.dip.utils.JF;
 import com.dataiku.dip.utils.JF.ObjectBuilder;
+
+// When the Signature of com.dataiku.dip.llm.custom.CustomLLMClient changes, this will need to change to com.dataiku.dip.llm.LLMStructuredRef
+import com.dataiku.dip.llm.promptstudio.PromptStudio.LLMStructuredRef;
 
 public class SnowparkContainerServicesLLM extends CustomLLMClient {
     public SnowparkContainerServicesLLM(){}
@@ -54,44 +51,13 @@ public class SnowparkContainerServicesLLM extends CustomLLMClient {
     private double snowflakeCreditCost = 3.0;
 
     ResolvedSettings rs;
-    private ExternalJSONAPIClient client;
+    
+    
     private ExternalJSONAPIClient llmClient;
 
     private InternalLLMUsageData usageData = new LLMUsageData();
     HTTPBasedLLMNetworkSettings networkSettings = new HTTPBasedLLMNetworkSettings();
-    Gson gson_2 = new Gson();
-
-    private static class RawCompletionChoice {
-        String text;
-    }
-    private static class RawChatCompletionMessage {
-        String role;
-        String content;
-    }
-    private static class RawChatCompletionChoice {
-        RawChatCompletionMessage message;
-    }
-    private static class RawUsageResponse {
-        int total_tokens;
-        int prompt_tokens;
-        int completion_tokens;
-    }
-    private static class RawCompletionResponse {
-        List<RawCompletionChoice> choices;
-        RawUsageResponse usage;
-    }
-    private static class RawChatCompletionResponse {
-        List<RawChatCompletionChoice> choices;
-        RawUsageResponse usage;
-    }
-    private static class OpenAIEmbeddingResponse {
-        List<OpenAIEmbeddingResult> data = new ArrayList<>();
-        RawUsageResponse usage;
-
-    }
-    private static class OpenAIEmbeddingResult {
-        double[] embedding;
-    }
+    Gson gson = new Gson();
 
     public void init(ResolvedSettings settings) {
         this.rs = settings;
@@ -108,24 +74,23 @@ public class SnowparkContainerServicesLLM extends CustomLLMClient {
             HTTPBasedLLMNetworkSettings networkSettings = new HTTPBasedLLMNetworkSettings();  
             OnlineLLMUtils.add429RetryStrategy(builder, networkSettings);  
         };  
-        ExternalJSONAPIClient tokenClient = client = new ExternalJSONAPIClient(snowflakeAccountURL, null, true, com.dataiku.dip.ApplicationConfigurator.getProxySettings(), customizeBuilderCallback);
-
+        // Begin Oauth to Session Token Dance 
+        ExternalJSONAPIClient tokenClient = new ExternalJSONAPIClient(snowflakeAccountURL, null, true, com.dataiku.dip.ApplicationConfigurator.getProxySettings(), customizeBuilderCallback);
         JsonObject tokenRequestBody= new JsonObject();
-        
         tokenRequestBody.addProperty("AUTHENTICATOR", "OAUTH");
         tokenRequestBody.addProperty("TOKEN", access_token);
         JsonObject trData = new JsonObject();
         trData.add("data",tokenRequestBody);
+
         JsonObject tokenResp=new JsonObject();
         try {
             tokenResp = tokenClient.postObjectToJSON("/session/v1/login-request", JsonObject.class, trData);
         } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            logger.error("SPCS session token exchange failed",e);
         }
         String sessionStr=tokenResp.get("data").getAsJsonObject().get("token").getAsString();
         String snowflakeToken =  "Snowflake Token=\""+sessionStr+"\"";
-
+        // Decorate header with session token
         llmClient = new ExternalJSONAPIClient(llmEndpointUrl, null, true, com.dataiku.dip.ApplicationConfigurator.getProxySettings(), customizeBuilderCallback);  
         llmClient.addHeader("Authorization", snowflakeToken);
     }
@@ -186,37 +151,32 @@ public class SnowparkContainerServicesLLM extends CustomLLMClient {
         jsonMessages.add(jsonMessage);
 
         ob.withJSON("data", jsonMessages);
-        String soICanSeeThisJsonMessages = jsonMessages.toString();
-        String soICanSeeThisOb = ob.get().toString();
-        
-        logger.info("Raw SPCS LLM chat completion: " + JSON.pretty(ob.get()));
 
+        logger.info("Raw SPCS LLM chat completion: " + JSON.pretty(ob.get()));
         String endpoint = llmEndpointUrl + "/predict";
         logger.info("posting to SPCS LLM at: "+ endpoint);
-
         JsonObject response = llmClient.postObjectToJSON("/predict", networkSettings.queryTimeoutMS, JsonObject.class, ob.get());
-            
         JsonArray generations = response.get("data").getAsJsonArray();
-        
         if (generations.size() != 1) {
             throw new IllegalArgumentException("Did not get a single generation??");
         }
-        
         JsonArray generation0 = generations.get(0).getAsJsonArray();
         JsonObject generation1 = generation0.get(1).getAsJsonObject();
+        
+        //SPCS returns an array of strings which contain JSON, extract String and parse as JSON
         String text = generation1.get("outputs").getAsString();
-        JsonArray gen3 = gson_2.fromJson(text, JsonArray.class);
+        JsonArray gen3 = gson.fromJson(text, JsonArray.class);
         String genText = gen3.get(0).getAsJsonObject().get("generated_text").getAsString();
 
         // And build the final result
-        SimpleCompletionResponse blah = new SimpleCompletionResponse();
-        blah.text = genText;
+        SimpleCompletionResponse completionResponse = new SimpleCompletionResponse();
+        completionResponse.text = genText;
 
-        blah.promptTokens =  (int)(2.5f * new TokenizedText(completePrompt).size());
-        blah.completionTokens = (int)(2.5f *  new TokenizedText(genText).size());
-        blah.tokenCountsAreEstimated = true;
+        completionResponse.promptTokens =  (int)(2.5f * new TokenizedText(completePrompt).size());
+        completionResponse.completionTokens = (int)(2.5f *  new TokenizedText(genText).size());
+        completionResponse.tokenCountsAreEstimated = true;
 
-        return blah;
+        return completionResponse;
     }
 
     public SimpleEmbeddingResponse embed(String text) throws IOException {
@@ -231,8 +191,6 @@ public class SnowparkContainerServicesLLM extends CustomLLMClient {
         jsonMessages.add(jsonMessage);
 
         ob.withJSON("data", jsonMessages);
-        String soICanSeeThisJsonMessages = jsonMessages.toString();
-        String soICanSeeThisOb = ob.get().toString();
 
         logger.info("Raw SPCS LLM embed: " + JSON.pretty(ob.get()));
 
@@ -294,10 +252,10 @@ public class SnowparkContainerServicesLLM extends CustomLLMClient {
         ComputeResourceUsage cru = new ComputeResourceUsage();
         cru.setupLLMUsage(usageType, llmRef.connection, llmRef.type.toString());
         cru.llmUsage.setFromInternal(this.usageData);
-        return cru;
-        
-        //return null;
+        return cru; 
     }
 
     private static DKULogger logger = DKULogger.getLogger("dku.llm.spcsplugin");
+
+ 
 }
