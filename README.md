@@ -18,7 +18,7 @@ With this plugin, you can leverage LLMs hosted in Snowpark Container Services (S
 
 # Setup
 ## Setup resources on the Snowflake side
-1. Ensure that Snowpark Container Services is activated in your Snowflake account (ask your Snowflake rep)
+1. Ensure that Snowpark Container Services (including SPCS jobs) is activated in your Snowflake account (ask your Snowflake rep)
 
 2. (In Snowflake as ACCOUNTADMIN) Run the below code to:
 	a. Create a role with access to SCPS and grant this role to users
