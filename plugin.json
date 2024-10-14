@@ -2,12 +2,12 @@
     "id": "snowpark-container-services-llm",
     "version": "1.0.0",
     "meta": {
-        "label": "Snowpark Container Services LLM",
-        "description": "Connect to an LLM deployed in Snowpark Container Services",
-        "author": "Pat Masi-Phelps, Adam Gugliciello, and Adam Nellis (Dataiku)",
+        "label": "Snowpark 컨테이너 서비스 LLM",
+        "description": "Snowpark 컨테이너 서비스에 배포된 LLM에 연결합니다.",
+        "author": "Pat Masi-Phelps, Adam Gugliciello, Adam Nellis (Dataiku)",
         "icon": "icon-snowflake",
-        "tags": [], 
+        "tags": [],
         "url": "",
-        "licenseInfo": "Apache Software License"
+        "licenseInfo": "아파치 소프트웨어 라이선스"
     }
 }
