@@ -1,19 +1,17 @@
 {
-    "meta" : {
-        "label": "Snowflake login with SSO",
-        "description": "Define a preset that DSS users can use to authenticate themselves on snowflake. The plugin will work with per-user credentials.",
+    "meta": {
+        "label": "Snowflake SSO 로그인",
+        "description": "DSS 사용자가 Snowflake에 인증할 때 사용할 수 있는 프리셋을 정의합니다. 이 플러그인은 사용자별 자격 증명으로 작동합니다.",
         "icon": "icon-cloud"
     },
     "defaultDefinableInline": true,
     "defaultDefinableAtProjectLevel": true,
-    "pluginParams": [
-    ],
-
+    "pluginParams": [],
     "params": [
-         {
+        {
             "name": "snowflake_oauth",
             "type": "CREDENTIAL_REQUEST",
-            "label": "Snowflake Single Sign On",
+            "label": "Snowflake 싱글 사인 온",
             "credentialRequestSettings": {
                 "type": "OAUTH2",
                 "authorizationEndpoint": "",
@@ -24,25 +22,24 @@
         },
         {
             "name": "authorizationEndpoint",
-            "label": "Auth authorization endpoint",
+            "label": "인증 권한 부여 엔드포인트",
             "type": "STRING",
-            "description": "Similar to https://<SNOWFLAKE_ACCOUNT_ID>.prod3.us-west-2.aws.snowflakecomputing.com/oauth/authorize",
+            "description": "예: https://<SNOWFLAKE_ACCOUNT_ID>.prod3.us-west-2.aws.snowflakecomputing.com/oauth/authorize",
             "mandatory": true
         },
         {
             "name": "tokenEndpoint",
-            "label": "Auth token endpoint",
+            "label": "인증 토큰 엔드포인트",
             "type": "STRING",
-            "description": "Similar to https://<SNOWFLAKE_ACCOUNT_ID>.prod3.us-west-2.aws.snowflakecomputing.com/oauth/token-request",
+            "description": "예: https://<SNOWFLAKE_ACCOUNT_ID>.prod3.us-west-2.aws.snowflakecomputing.com/oauth/token-request",
             "mandatory": true
         },
         {
             "name": "scope",
-            "label": "Scope",
+            "label": "범위",
             "type": "STRING",
-            "description": "Example: refresh_token session:role:DATAIKU_SPCS_ROLE",
+            "description": "예: refresh_token session:role:DATAIKU_SPCS_ROLE",
             "mandatory": true
         }
-        
     ]
 }
