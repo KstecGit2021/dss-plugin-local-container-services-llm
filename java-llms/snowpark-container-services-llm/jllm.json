@@ -1,66 +1,66 @@
 {
     "id": "snowpark-container-services-llm",
-    "meta" : {
-        "label": "Snowpark Container Services LLM"
+    "meta": {
+        "label": "Snowpark 컨테이너 서비스 LLM"
     },
     "params": [
-         {
+        {
             "name": "oauth",
-            "label": "Snowflake preset",
+            "label": "Snowflake 프리셋",
             "type": "PRESET",
             "parameterSetId": "oauth-credentials",
             "mandatory": true
         },
         {
             "name": "modelHandlingMode",
-            "label": "Model Handling Mode",
+            "label": "모델 처리 모드",
             "type": "SELECT",
             "selectChoices": [
-                { "value": "TEXT_GENERATION_LLAMA_2", "label": "Llama 2 model"},
-                { "value": "TEXT_GENERATION_MISTRAL", "label": "Mistral model"},
-                { "value": "TEXT_GENERATION_ZEPHYR", "label": "Zephyr model"},
-                { "value": "TEXT_GENERATION_FALCON", "label": "Falcon model"},
-                { "value": "TEXT_GENERATION_OTHER", "label": "Other model"},
-                { "value": "TEXT_GENERATION_OTHER", "label": "Embedding model"}
+                { "value": "TEXT_GENERATION_LLAMA_2", "label": "Llama 2 모델" },
+                { "value": "TEXT_GENERATION_MISTRAL", "label": "Mistral 모델" },
+                { "value": "TEXT_GENERATION_ZEPHYR", "label": "Zephyr 모델" },
+                { "value": "TEXT_GENERATION_FALCON", "label": "Falcon 모델" },
+                { "value": "TEXT_GENERATION_OTHER", "label": "기타 모델" },
+                { "value": "TEXT_GENERATION_OTHER", "label": "임베딩 모델" }
             ],
-            "description": "Choose the model type deployed to SPCS. If not in this list, choose 'Other' and manually format the prompt yourself.",
+            "description": "SPCS에 배포된 모델 유형을 선택합니다. 이 목록에 없는 경우 '기타'를 선택하고 프롬프트를 수동으로 형식화하세요.",
             "mandatory": true
         },
         {
             "name": "llmEndpointUrl",
-            "label": "LLM Endpoint URL",
+            "label": "LLM 엔드포인트 URL",
             "type": "STRING",
-            "description": "Assumes 'predict' endpoint. Don't include /predict at the end of this URL",
+            "description": "'predict' 엔드포인트를 가정합니다. 이 URL 끝에 /predict를 포함하지 마세요.",
             "mandatory": true
         },
         {
             "name": "snowflakeAccountUrl",
-            "label": "Snowflake account url",
+            "label": "Snowflake 계정 URL",
             "type": "STRING",
-            "description": "e.g. https://ACCOUNT_ID.prod3.us-west-2.aws.snowflakecomputing.com",
+            "description": "예: https://ACCOUNT_ID.prod3.us-west-2.aws.snowflakecomputing.com",
             "mandatory": true
         },
         {
             "name": "maxParallelism",
-            "label": "Max Parallelism",
+            "label": "최대 병렬 처리",
             "type": "INT",
-            "description": "Queries to run in parallel",
+            "description": "병렬로 실행할 쿼리 수",
             "mandatory": false
         },
         {
             "name": "spcsCreditsPerHourCost",
-            "label": "LLM Compute Pool Credit Cost",
+            "label": "LLM 컴퓨팅 풀 크레딧 비용",
             "type": "DOUBLE",
-            "description": "Credits per hour",
+            "description": "시간당 크레딧",
             "mandatory": false
         },
         {
             "name": "snowflakeCreditCost",
-            "label": "Snowflake Credit Cost",
+            "label": "Snowflake 크레딧 비용",
             "type": "DOUBLE",
-            "description": "Dollars per Snowflake Credit",
+            "description": "Snowflake 크레딧당 달러",
             "mandatory": false
-        }       
+        }
     ],
     "clientClass": "com.snowflake.llm.SnowparkContainerServicesLLM"
 }
