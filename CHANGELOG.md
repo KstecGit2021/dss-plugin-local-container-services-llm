@@ -1,7 +1,7 @@
-# Changelog
+# 변경 로그
 
-## [Version 1.0.0] - Initial Release - 2024-03
+## [버전 1.0.0] - 초기 출시 - 2024-03
 
-* Custom LLM connection option for LLMs deployed on Snowpark Container Services (with a public endpoint)
-* Connect to a chat completion endpoint hosted in SPCS to use in Dataiku Prompt Studios, LLM recipes, and via the LLM Mesh python APIs
-* Connect to an embedding endpoint hosted in SPCS to use in Dataiku Embed recipe for Retrieval Augmented Generation (RAG)
+* 공개 엔드포인트가 있는 Snowpark Container Services에 배포된 LLM에 대한 사용자 정의 LLM 연결 옵션
+* Dataiku Prompt Studios, LLM 레시피 및 LLM Mesh Python API를 사용하여 SPCS에 호스팅된 채팅 완료 엔드포인트에 연결
+* 검색 증강 생성(RAG)을 위한 Dataiku Embed 레시피에서 사용할 수 있도록 SPCS에 호스팅된 임베딩 엔드포인트에 연결
