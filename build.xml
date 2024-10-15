@@ -1,32 +1,35 @@
-<project name="dss-plugin-connections-projects-restrictions" default="jar">
-    <property name="build.dir" value="java-build" />
-    <property name="dist.dir" value="java-lib" />
-    <property environment="env"/>
-
-    <target name="clean">
-        <delete dir="${dist.dir}" />
-        <delete dir="${build.dir}" />
+<project name="dss-plugin-connections-projects-restrictions" default="jar"> 
+    <property name="build.dir" value="java-build" />  <!-- 빌드 디렉토리 경로 설정 -->
+    <property name="dist.dir" value="java-lib" />  <!-- 배포 디렉토리 경로 설정 -->
+    <property environment="env"/>  <!-- 환경 변수 설정 -->
+    
+    <target name="clean"> 
+        <delete dir="${dist.dir}" />  <!-- dist 디렉토리 삭제 -->
+        <delete dir="${build.dir}" />  <!-- 빌드 디렉토리 삭제 -->
     </target>
-
-    <target name="jar">
-        <path id="lib.path.id">
-            <fileset dir="${env.DKUINSTALLDIR}/lib/ivy/backend-run" />
-            <fileset dir="${env.DKUINSTALLDIR}/lib/ivy/common-run" />
-            <fileset dir="${env.DKUINSTALLDIR}/lib/shadelib" />
-            <fileset file="${env.DKUINSTALLDIR}/dist/dataiku-core.jar" />
-            <fileset file="${env.DKUINSTALLDIR}/dist/dataiku-app-platform.jar" />
-            <fileset file="${env.DKUINSTALLDIR}/dist/dataiku-scoring.jar" />
-            <fileset file="${env.DKUINSTALLDIR}/dist/dataiku-dip.jar" />
-            <fileset file="${env.DKUINSTALLDIR}/dist/dataiku-prepare-core.jar" />
+    
+    <target name="jar"> 
+        <path id="lib.path.id"> 
+            <fileset dir="${env.DKUINSTALLDIR}/lib/ivy/backend-run" />  <!-- 백엔드 실행을 위한 라이브러리 경로 설정 -->
+            <fileset dir="${env.DKUINSTALLDIR}/lib/ivy/common-run" />  <!-- 공통 실행을 위한 라이브러리 경로 설정 -->
+            <fileset dir="${env.DKUINSTALLDIR}/lib/shadelib" />  <!-- 쉐이드 라이브러리 경로 설정 -->
+            <fileset file="${env.DKUINSTALLDIR}/dist/dataiku-core.jar" />  <!-- Dataiku 코어 라이브러리 파일 경로 설정 -->
+            <fileset file="${env.DKUINSTALLDIR}/dist/dataiku-app-platform.jar" />  <!-- Dataiku 앱 플랫폼 라이브러리 파일 경로 설정 -->
+            <fileset file="${env.DKUINSTALLDIR}/dist/dataiku-scoring.jar" />  <!-- Dataiku 스코어링 라이브러리 파일 경로 설정 -->
+            <fileset file="${env.DKUINSTALLDIR}/dist/dataiku-dip.jar" />  <!-- Dataiku DIP 라이브러리 파일 경로 설정 -->
+            <fileset file="${env.DKUINSTALLDIR}/dist/dataiku-prepare-core.jar" />  <!-- Dataiku 준비 코어 라이브러리 파일 경로 설정 -->
         </path>
-        <mkdir dir="${build.dir}" />
-        <mkdir dir="${dist.dir}" />
-        <javac debug="true" destdir="${build.dir}" source="1.8" target="1.8" classpathref="lib.path.id" encoding="utf-8" includeantruntime="false">
-            <compilerarg value="-Xlint:all" />
-            <src>
-                <pathelement location="java-llms/snowpark-container-services-llm" />
+        
+        <mkdir dir="${build.dir}" />  <!-- 빌드 디렉토리 생성 -->
+        <mkdir dir="${dist.dir}" />  <!-- 배포 디렉토리 생성 -->
+        
+        <javac debug="true" destdir="${build.dir}" source="1.8" target="1.8" classpathref="lib.path.id" encoding="utf-8" includeantruntime="false"> 
+            <compilerarg value="-Xlint:all" />  <!-- 모든 경고를 출력하도록 설정 -->
+            <src> 
+                <pathelement location="java-llms/snowpark-container-services-llm" />  <!-- 소스 코드 경로 설정 -->
             </src>
         </javac>
-        <jar destfile="${dist.dir}/snowparkcontainerservicesllm.jar" basedir="${build.dir}" />
+        
+        <jar destfile="${dist.dir}/snowparkcontainerservicesllm.jar" basedir="${build.dir}" />  <!-- JAR 파일 생성: 빌드 디렉토리를 기반으로 JAR 파일을 dist 디렉토리에 생성 -->
     </target>
 </project>
